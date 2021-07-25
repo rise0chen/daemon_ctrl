@@ -8,12 +8,16 @@ fn main() {
     cfg.auto_restart(true);
     cfg.set_ctrl_file(String::from(CTRL_FILE)).unwrap();
 
-    if ctrl(cfg) {
-        println!("into daemon.");
-        std::process::exit(0);
+    if let Ok(is_parent) = ctrl(cfg) {
+        if is_parent {
+            println!("into daemon.");
+            std::process::exit(0);
+        } else {
+            println!("running...");
+            std::thread::sleep(Duration::from_secs(30));
+            println!("exit");
+        }
     } else {
-        println!("running...");
-        std::thread::sleep(Duration::from_secs(30));
-        println!("exit");
+        println!("not support");
     }
 }

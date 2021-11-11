@@ -1,4 +1,5 @@
 use super::Contral;
+use crate::consts::*;
 use core::time::Duration;
 use std::io::Result as IoResult;
 use std::path::Path;
@@ -106,6 +107,7 @@ impl Watch {
         }
         let child = Command::new(&self.program)
             .args(&self.args)
+            .env(CHILD_ENV_KEY, CHILD_ENV_VAL)
             .spawn()
             .unwrap();
         self.child = Some(child);

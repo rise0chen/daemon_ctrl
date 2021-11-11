@@ -1,7 +1,10 @@
+mod consts;
 mod contral;
 mod watch;
 
+use consts::*;
 pub use contral::Contral;
+use std::env;
 use watch::Watch;
 pub use watch::WatchConfig;
 
@@ -14,15 +17,17 @@ pub fn ctrl(_cfg: WatchConfig) -> Result<bool, ()> {
 /// return: is_parent:bool
 #[cfg(not(windows))]
 pub fn ctrl(cfg: WatchConfig) -> Result<bool, ()> {
-    let mut args = std::env::args();
+    let mut args = env::args();
     let program = args.next().unwrap();
-    let mut args: Vec<String> = args.collect();
-    if let Some(_) = args.iter().find(|v| *v == "by_auto_restart") {
-        return Ok(false);
+    let args: Vec<String> = args.collect();
+    println!("{}",CHILD_ENV_KEY);
+    if let Ok(ref val) = env::var(CHILD_ENV_KEY) {
+        if val == CHILD_ENV_VAL {
+            return Ok(false);
+        }
     }
     use fork::{daemon, Fork};
     if let Ok(Fork::Child) = daemon(true, true) {
-        args.push(String::from("by_auto_restart"));
         let mut watch = Watch::new(program, args, cfg);
         watch.watch();
     }

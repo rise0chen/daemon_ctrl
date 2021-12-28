@@ -1,64 +1,47 @@
-# Fixed-Queue
+# Daemon Ctrl
 
-A heapless version of the Rust `Vec`, `VecDeque`.
-
-no_std, no_alloc, use [T; N].
-
-support `Vec`/`VecDeque`/`spsc`/`History`.
+- auto restart
+- request restart by file system
 
 ## Usage
 
-### Vec
+### main
 
 ```rust
-use fixed_queue::Vec;
+use core::time::Duration;
+use daemon_ctrl::{ctrl, WatchConfig};
 
-let mut vec: Vec<u8, 3> = Vec::new();
-assert_eq!(vec.capacity(), 3);
-assert!(vec.is_empty());
-vec.push(1);
-println!("{}", vec[0]);
-println!("{:?}", vec.pop());
+const CTRL_FILE: &str = "a/a/a/a";
+
+fn main() {
+    let mut cfg = WatchConfig::new();
+    cfg.auto_restart(true);
+    cfg.set_ctrl_file(String::from(CTRL_FILE)).unwrap();
+
+    if let Ok(is_parent) = ctrl(cfg) {
+        if is_parent {
+            println!("into daemon.");
+            std::process::exit(0);
+        }
+    } else {
+        println!("not support");
+    }
+
+    // your program
+}
 ```
 
-### VecDeque
+### request restart by file system
 
 ```rust
-use fixed_queue::VecDeque;
+use daemon_ctrl::Contral;
 
-let mut vec: VecDeque<u8, 4> = VecDeque::new();
-assert_eq!(vec.capacity(), 3);
-assert!(vec.is_empty());
-vec.push_back(1);
-println!("{}", vec[0]);
-vec.push_front(2);
-println!("{}", vec[1]);
-println!("{:?}", vec.pop_back());
-println!("{:?}", vec.pop_front());
-```
+const CTRL_FILE: &str = "a/a/a/a";
 
-### SPSC
-
-```rust
-use fixed_queue::Spsc;
-static SPSC: Spsc<u8, 4> = Spsc::new();
-
-let sender = SPSC.take_sender().unwrap();
-let recver = SPSC.take_recver().unwrap();
-
-assert_eq!(SPSC.capacity(), 3);
-assert!(sender.send(1).is_ok());
-assert!(sender.send(2).is_ok());
-assert!(sender.send(3).is_ok());
-assert!(sender.send(4).is_err());
-```
-
-### History
-
-```rust
-use fixed_queue::History;
-static HISTORY: History<u8, 3> = History::new();
-
-assert!(HISTORY.insert(1));
-assert!(HISTORY.contains(&1));
+fn main() {
+    let mut ctrl = Contral::read(CTRL_FILE);
+    println!("now: {:?}", ctrl);
+    ctrl.reboot = true;
+    ctrl.save(CTRL_FILE);
+}
 ```

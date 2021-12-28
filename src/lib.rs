@@ -20,7 +20,6 @@ pub fn ctrl(cfg: WatchConfig) -> Result<bool, ()> {
     let mut args = env::args();
     let program = args.next().unwrap();
     let args: Vec<String> = args.collect();
-    println!("{}",CHILD_ENV_KEY);
     if let Ok(ref val) = env::var(CHILD_ENV_KEY) {
         if val == CHILD_ENV_VAL {
             return Ok(false);

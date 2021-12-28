@@ -49,7 +49,6 @@ impl Watch {
         }
     }
     pub fn watch(&mut self) {
-        println!("watch {}:{:?}", self.program, self.args);
         loop {
             let ctrl_changed = {
                 if let Some((file, modtim)) = &mut self.cfg.ctrl_file {
@@ -66,7 +65,7 @@ impl Watch {
                 }
             };
             if ctrl_changed {
-                println!("ctrl file changed.");
+                log::info!("ctrl file changed.");
                 let file = self.cfg.ctrl_file.as_ref().unwrap().0.clone();
                 let mut ctrl = Contral::read(&file);
 
@@ -101,7 +100,7 @@ impl Watch {
         }
     }
     fn child_restart(&mut self) {
-        println!("restart {}:{:?}", self.program, self.args);
+        log::info!("restart {}:{:?}", self.program, self.args);
         if let Some(child) = &mut self.child {
             let _err = child.kill();
         }

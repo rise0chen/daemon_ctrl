@@ -41,6 +41,7 @@ pub struct Watch {
 }
 impl Watch {
     pub fn new(program: String, args: Vec<String>, cfg: WatchConfig) -> Self {
+        let _ = will_exit::init();
         Self {
             program,
             args,
@@ -48,8 +49,12 @@ impl Watch {
             child: None,
         }
     }
-    pub fn watch(&mut self) {
+    pub fn watch(&mut self) -> ! {
         loop {
+            if will_exit::will_exit() {
+                self.child_stop();
+                thread::park();
+            }
             let ctrl_changed = {
                 if let Some((file, modtim)) = &mut self.cfg.ctrl_file {
                     let attr = fs::metadata(&*file).unwrap();
@@ -72,7 +77,8 @@ impl Watch {
                 let mut need_save = false;
                 if ctrl.reboot {
                     ctrl.reboot = false;
-                    self.child_restart();
+                    self.child_stop();
+                    self.child_start();
                     need_save = true;
                 }
                 if need_save {
@@ -93,22 +99,30 @@ impl Watch {
                     ret
                 };
                 if need_start {
-                    self.child_restart();
+                    self.child_start();
                 }
             }
             thread::sleep(Duration::from_millis(1000));
         }
     }
-    fn child_restart(&mut self) {
-        log::info!("restart {}:{:?}", self.program, self.args);
-        if let Some(child) = &mut self.child {
+    fn child_stop(&mut self) {
+        if let Some(mut child) = self.child.take() {
             let _err = child.kill();
+            let _err = child.wait();
         }
+    }
+    fn child_start(&mut self) {
+        log::info!("start {}:{:?}", self.program, self.args);
         let child = Command::new(&self.program)
             .args(&self.args)
             .env(CHILD_ENV_KEY, CHILD_ENV_VAL)
             .spawn()
             .unwrap();
         self.child = Some(child);
+    }
+}
+impl Drop for Watch {
+    fn drop(&mut self) {
+        self.child_stop();
     }
 }

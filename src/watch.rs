@@ -1,4 +1,4 @@
-use super::Contral;
+use super::Control;
 use crate::consts::*;
 use core::time::Duration;
 use std::io::Result as IoResult;
@@ -72,7 +72,7 @@ impl Watch {
             if ctrl_changed {
                 log::info!("ctrl file changed.");
                 let file = self.cfg.ctrl_file.as_ref().unwrap().0.clone();
-                let mut ctrl = Contral::read(&file);
+                let mut ctrl = Control::read(&file);
 
                 let mut need_save = false;
                 if ctrl.reboot {

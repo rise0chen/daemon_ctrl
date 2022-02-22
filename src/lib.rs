@@ -1,9 +1,9 @@
 mod consts;
-mod contral;
+mod control;
 mod watch;
 
 use consts::*;
-pub use contral::Contral;
+pub use control::Control;
 use std::env;
 use watch::Watch;
 pub use watch::WatchConfig;
